@@ -7,16 +7,22 @@ import (
 )
 
 func main() {
+    executeTrades() // Execute immediately on start
+
     ticker := time.NewTicker(6 * time.Hour)
 
     for {
         select {
         case <-ticker.C:
-            ohlcData := binance.FetchOHLCData()
-            resistance, support := utils.CalculateLevels(ohlcData)
-            binance.ExecuteTrades(resistance, support)
+            executeTrades() // Then execute every 6 hours
         }
     }
+}
+
+func executeTrades() {
+    ohlcData := binance.FetchOHLCData()
+    resistance, support := utils.CalculateLevels(ohlcData)
+    binance.ExecuteTrades(resistance, support)
 }
 
 // func executeTrades(resistance []float64, support []float64) {
