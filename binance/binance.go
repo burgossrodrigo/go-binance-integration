@@ -1,22 +1,22 @@
 package binance
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/valyala/fasthttp"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	models "binance-integration/models"
 	utils "binance-integration/utils"
 	config "binance-integration/config"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
-	"context"
-	"time"
 )
 
-
-func FetchOHLCData() []models.OHLC {
-	url := "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=6h&limit=32"
+func FetchOHLCData(interval string, limit int) []models.OHLC {
+	url := fmt.Sprintf("https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=%s&limit=%d", interval, limit)
 
 	req := fasthttp.AcquireRequest()
 	req.SetRequestURI(url)
@@ -66,18 +66,6 @@ func FetchOHLCData() []models.OHLC {
 		formattedResponses = append(formattedResponses, formattedResponse)
 	}
 
-	open := make([]float64, len(formattedResponses))
-	high := make([]float64, len(formattedResponses))
-	low := make([]float64, len(formattedResponses))
-	close := make([]float64, len(formattedResponses))
-
-	for i, ohlc := range formattedResponses {
-		open[i] = utils.ParseFloat64(ohlc.Open)
-		high[i] = utils.ParseFloat64(ohlc.High)
-		low[i] = utils.ParseFloat64(ohlc.Low)
-		close[i] = utils.ParseFloat64(ohlc.Close)
-	}
-
 	return formattedResponses
 }
 
@@ -112,7 +100,7 @@ func FetchCurrentPrice() float64 {
 	return utils.ParseFloat64(priceData.Price)
 }
 
-func ExecuteTrades(resistance []float64, support []float64) {
+func ExecuteTrades(interval string, limit int, resistance []float64, support []float64) {
     cfg := config.LoadEnv()
 	
 	client, err := mongo.NewClient(options.Client().ApplyURI(cfg.MongoURI))
@@ -158,3 +146,4 @@ func ExecuteTrades(resistance []float64, support []float64) {
         log.Fatal(err)
     }
 }
+

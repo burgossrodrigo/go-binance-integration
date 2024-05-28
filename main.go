@@ -1,28 +1,34 @@
 package main
 
 import (
-    utils "binance-integration/utils"
-    binance "binance-integration/binance"
-    "time"
+	binance "binance-integration/binance"
+	utils "binance-integration/utils"
+	"time"
 )
 
 func main() {
-    executeTrades() // Execute immediately on start
+	executeTrades() // Execute immediately on start
 
-    ticker := time.NewTicker(6 * time.Hour)
+	ticker := time.NewTicker(5 * time.Minute)
 
-    for {
-        select {
-        case <-ticker.C:
-            executeTrades() // Then execute every 6 hours
-        }
-    }
+	for {
+		select {
+		case <-ticker.C:
+			executeTrades() // Then execute every 6 hours
+		}
+	}
 }
 
 func executeTrades() {
-    ohlcData := binance.FetchOHLCData()
-    resistance, support := utils.CalculateLevels(ohlcData)
-    binance.ExecuteTrades(resistance, support)
+	interval := "5m"
+	limit := 200 // Obtendo as últimas 200 velas de 5 minutos
+
+	ohlcData := binance.FetchOHLCData(interval, limit)
+
+	support, resistance := utils.IdentifyLevels(ohlcData)
+
+	// resistance, support := utils.CalculateLevels(ohlcData)
+	binance.ExecuteTrades(interval, limit, resistance, support)
 }
 
 // func executeTrades(resistance []float64, support []float64) {
